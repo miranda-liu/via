@@ -10,4 +10,5 @@ import mapboxgl from 'mapbox-gl';
 
 map.on('load', function () {
     map.resize();
+    // dynamic map sizing
 });
