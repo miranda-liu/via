@@ -17,44 +17,44 @@
         zoom: 9, // starting zoom
     });
 
-    map.on('load', () => {
-        map.loadImage('https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png', (error, image) => {
-        if (error) throw error;
-        map.addImage('custom-marker', image);
-    })
+    // map.on('load', () => {
+    //     map.loadImage('https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png', (error, image) => {
+    //     if (error) throw error;
+    //     map.addImage('custom-marker', image);
+    // })
 
-    // add GeoJSON file of Boston crime data
-    map.addSource('points', {
-        'type': 'geojson',
-        'data': {
-            "type": "FeatureCollection",
-            "features": [
-                {
-                    "type": "Feature",
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates":  [ -71.10429497557632,42.30971815419562 ]
-                    },
-                "properties": {
-                    "INCIDENT_NUMBER":"232006462",
-                    "OFFENSE_CODE":1107,
-                    "OFFENSE_CODE_GROUP":"",
-                    "OFFENSE_DESCRIPTION":"FRAUD - IMPERSONATION",
-                    "DISTRICT":"E13",
-                    "REPORTING_AREA":"574",
-                    "SHOOTING":"0",
-                    "OCCURRED_ON_DATE":"2023-01-01 00:00:00+00",
-                    "YEAR":2023,
-                    "MONTH":1,
-                    "DAY_OF_WEEK":"Sunday",
-                    "HOUR":0,
-                    "UCR_PART":"",
-                    "STREET":"WASHINGTON ST",
-                    "Location":"(42.30971815419562, -71.10429497557632)"
-                }
-            }
-        ]
-    }});
+    // // add GeoJSON file of Boston crime data
+    // map.addSource('points', {
+    //     'type': 'geojson',
+    //     'data': {
+    //         "type": "FeatureCollection",
+    //         "features": [
+    //             {
+    //                 "type": "Feature",
+    //                 "geometry": {
+    //                     "type": "Point",
+    //                     "coordinates":  [ -71.10429497557632,42.30971815419562 ]
+    //                 },
+    //             "properties": {
+    //                 "INCIDENT_NUMBER":"232006462",
+    //                 "OFFENSE_CODE":1107,
+    //                 "OFFENSE_CODE_GROUP":"",
+    //                 "OFFENSE_DESCRIPTION":"FRAUD - IMPERSONATION",
+    //                 "DISTRICT":"E13",
+    //                 "REPORTING_AREA":"574",
+    //                 "SHOOTING":"0",
+    //                 "OCCURRED_ON_DATE":"2023-01-01 00:00:00+00",
+    //                 "YEAR":2023,
+    //                 "MONTH":1,
+    //                 "DAY_OF_WEEK":"Sunday",
+    //                 "HOUR":0,
+    //                 "UCR_PART":"",
+    //                 "STREET":"WASHINGTON ST",
+    //                 "Location":"(42.30971815419562, -71.10429497557632)"
+    //             }
+    //         }
+    //     ]
+    // }});
 
     
 
