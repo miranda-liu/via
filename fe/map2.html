@@ -1,219 +1,184 @@
 <!DOCTYPE html>
 <html lang='en'>
-  <head>
-    <meta charset='utf-8' />
-    <title>Getting started with the Mapbox Directions API</title>
-    <meta name='viewport' content='width=device-width, initial-scale=1' />
-    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js'></script>
-    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css' rel='stylesheet' />
-    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.js"></script>
-    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.css" type="text/css">
-    <script src="output.js"></script>
-    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.js"></script>
-    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.css" type="text/css">
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
-      }
+<head>
+  <meta charset='utf-8' />
+  <title>Getting started with the Mapbox Directions API</title>
+  <meta name='viewport' content='width=device-width, initial-scale=1' />
+  <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js'></script>
+  <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css' rel='stylesheet' />
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.js"></script>
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.css" type="text/css">
+  <script src="output.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
 
-      #map {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 100%;
-      }
-    </style>
-  </head>
-  <body>
-    <div id='map'></div>
-    <script>
-        mapboxgl.accessToken = 'pk.eyJ1Ijoicmt1YmEiLCJhIjoiY2xtbDZtbnBtMDg3MzJrbW9jNTJqMzVibiJ9.1G7FCXA5MdikERXLIAuJLQ';
-        const map = new mapboxgl.Map({
-            container: 'map',
-            style: 'mapbox://styles/mapbox/streets-v12',
-            center: [-71.038887, 42.364506], // starting position 42.3601, -71.0589
-            zoom: 6
-        });
-        
-        // const directions = new MapboxDirections({
-        //     accessToken: mapboxgl.accessToken,
-        // });
-        // map.addControl(directions, 'top-left');
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+<div id='map'></div>
+<script>
+  mapboxgl.accessToken = 'pk.eyJ1Ijoicmt1YmEiLCJhIjoiY2xtbDZtbnBtMDg3MzJrbW9jNTJqMzVibiJ9.1G7FCXA5MdikERXLIAuJLQ';
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v12',
+    center: [-71.038887, 42.364506], // starting position 42.3601, -71.0589
+    zoom: 6
+  });
 
-        const avoidCoordinates = [
-        [-71.096741, 42.360981]
-        ];
+  const avoidCoordinates = [
+    [-71.096741, 42.360981]
+  ];
 
-        // set the bounds of the map
-        // const bounds = [
-        // [-123.069003, 45.395273],
-        // [-122.303707, 45.612333]
-        // ];
-        // map.setMaxBounds(bounds);
+  // Initialize start and end as null
+  let start = null;
+  let end = null;
 
-        // an arbitrary start will always be the same
-        // only the end or destination will change 
-        const start = [-71.093430, 42.357620];
+  // create a function to make a directions request
+  map.on('click', (event) => {
+    const coords = Object.keys(event.lngLat).map((key) => event.lngLat[key]);
 
-        // create a function to make a directions request
-        async function getRoute(end) {
-        // make a directions request using cycling profile
-        // an arbitrary start will always be the same
-        // only the end or destination will change
-        const query = await fetch(
-            `https://api.mapbox.com/directions/v5/mapbox/walking/${start[0]},${start[1]};${end[0]},${end[1]}?steps=true&geometries=geojson&access_token=${mapboxgl.accessToken}`,
-            { method: 'GET' }
-        );
-        const json = await query.json();
-        const data = json.routes[0];
-        const route = data.geometry.coordinates;
-        const geojson = {
+    if (!start) {
+      start = coords;
+      // Add starting point to the map
+      map.addLayer({
+        id: 'start',
+        type: 'circle',
+        source: {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: [
+              {
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                  type: 'Point',
+                  coordinates: start
+                }
+              }
+            ]
+          }
+        },
+        paint: {
+          'circle-radius': 5,
+          'circle-color': '#3887be'
+        }
+      });
+    } else {
+      end = coords;
+      const endFeature = {
+        type: 'FeatureCollection',
+        features: [
+          {
             type: 'Feature',
             properties: {},
             geometry: {
-            type: 'LineString',
-            coordinates: route
+              type: 'Point',
+              coordinates: end
             }
-        };
-        // if the route already exists on the map, we'll reset it using setData
-        if (map.getSource('route')) {
-            map.getSource('route').setData(geojson);
-        }
-        // otherwise, we'll make a new request
-        else {
-            map.addLayer({
-            id: 'route',
-            type: 'line',
-            source: {
-                type: 'geojson',
-                data: geojson
-            },
-            layout: {
-                'line-join': 'round',
-                'line-cap': 'round'
-            },
-            paint: {
-                'line-color': '#3887be',
-                'line-width': 5,
-                'line-opacity': 0.75
-            }
-            });
-        }
-        // add turn instructions here at the end
-        }
-
-        map.on('load', () => {
-          map.loadImage(
-                  'https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png',
-                  (error, image) => {
-                    if (error) throw error;
-                    map.addImage('custom-marker', image);
-
-                    // Add GeoJSON from output.js
-                    map.addSource('points', {
-                      'type': 'geojson',
-                      'data': jsonData
-                    });
-
-                    // Add a symbol layer
-                    map.addLayer({
-                      'id': 'points',
-                      'type': 'symbol',
-                      'source': 'points',
-                      'layout': {
-                        'icon-image': 'custom-marker',
-                        // get the title name from the source's "title" property
-                        'text-field': ['get', 'title'],
-                        'text-font': [
-                          'Open Sans Semibold',
-                          'Arial Unicode MS Bold'
-                        ],
-                        'text-offset': [0, 1.25],
-                        'text-anchor': 'top'
-                      }
-                    });
-                  }
-          );
-        // make an initial directions request that
-        // starts and ends at the same location
-        getRoute(start);
-
-        // Add starting point to the map
+          }
+        ]
+      };
+      if (map.getLayer('end')) {
+        map.getSource('end').setData(endFeature);
+      } else {
         map.addLayer({
-            id: 'point',
-            type: 'circle',
-            source: {
+          id: 'end',
+          type: 'circle',
+          source: {
             type: 'geojson',
-            data: {
-                type: 'FeatureCollection',
-                features: [
-                {
-                    type: 'Feature',
-                    properties: {},
-                    geometry: {
-                    type: 'Point',
-                    coordinates: start
-                    }
-                }
-                ]
-            }
-            },
-            paint: {
-            'circle-radius': 10,
+            data: endFeature
+          },
+          paint: {
+            'circle-radius': 5,
             'circle-color': '#3887be'
-            }
+          }
         });
-        map.on('click', (event) => {
-            const coords = Object.keys(event.lngLat).map((key) => event.lngLat[key]);
-            const end = {
-                type: 'FeatureCollection',
-                features: [
-                {
-                    type: 'Feature',
-                    properties: {},
-                    geometry: {
-                    type: 'Point',
-                    coordinates: coords
-                    }
+      }
+      getRoute();
+    }
+  });
+
+  async function getRoute() {
+    if (!start || !end) return; // Do nothing if start or end is not set
+    const query = await fetch(
+            `https://api.mapbox.com/directions/v5/mapbox/walking/${start[0]},${start[1]};${end[0]},${end[1]}?steps=true&geometries=geojson&access_token=${mapboxgl.accessToken}`,
+            { method: 'GET' }
+    );
+    const json = await query.json();
+    const data = json.routes[0];
+    const route = data.geometry.coordinates;
+    const geojson = {
+      type: 'Feature',
+      properties: {},
+      geometry: {
+        type: 'LineString',
+        coordinates: route
+      }
+    };
+    if (map.getSource('route')) {
+      map.getSource('route').setData(geojson);
+    } else {
+      map.addLayer({
+        id: 'route',
+        type: 'line',
+        source: {
+          type: 'geojson',
+          data: geojson
+        },
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        paint: {
+          'line-color': '#8ebff1',
+          'line-width': 5,
+          'line-opacity': 0.75
+        }
+      });
+    }
+  }
+
+  map.on('load', () => {
+    map.loadImage(
+            'https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png',
+            (error, image) => {
+              if (error) throw error;
+              map.addImage('custom-marker', image);
+
+              // Add GeoJSON from output.js
+              map.addSource('points', {
+                'type': 'geojson',
+                'data': jsonData
+              });
+
+              map.addLayer({
+                'id': 'points',
+                'type': 'symbol',
+                'source': 'points',
+                'layout': {
+                  'icon-image': 'custom-marker',
+                  'text-field': ['get', 'title'],
+                  'text-font': [
+                    'Open Sans Semibold',
+                    'Arial Unicode MS Bold'
+                  ],
+                  'text-offset': [0, 1.25],
+                  'text-anchor': 'top'
                 }
-                ]
-            };
-            if (map.getLayer('end')) {
-                map.getSource('end').setData(end);
-            } else {
-                map.addLayer({
-                id: 'end',
-                type: 'circle',
-                source: {
-                    type: 'geojson',
-                    data: {
-                    type: 'FeatureCollection',
-                    features: [
-                        {
-                        type: 'Feature',
-                        properties: {},
-                        geometry: {
-                            type: 'Point',
-                            coordinates: coords
-                        }
-                        }
-                    ]
-                    }
-                },
-                paint: {
-                    'circle-radius': 10,
-                    'circle-color': '#f30'
-                }
-                }); 
+              });
             }
-            getRoute(coords, exclude = avoidCoordinates);
-            });
-
-
-    });
-
-
-    </script>
-  </body>
+    );
+  });
+</script>
+</body>
 </html>
