@@ -6,6 +6,8 @@
     <meta name='viewport' content='width=device-width, initial-scale=1' />
     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js'></script>
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css' rel='stylesheet' />
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.js"></script>
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.css" type="text/css">
     <script src="output.js"></script>
     <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.js"></script>
     <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.css" type="text/css">
@@ -102,6 +104,37 @@
         }
 
         map.on('load', () => {
+          map.loadImage(
+                  'https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png',
+                  (error, image) => {
+                    if (error) throw error;
+                    map.addImage('custom-marker', image);
+
+                    // Add GeoJSON from output.js
+                    map.addSource('points', {
+                      'type': 'geojson',
+                      'data': jsonData
+                    });
+
+                    // Add a symbol layer
+                    map.addLayer({
+                      'id': 'points',
+                      'type': 'symbol',
+                      'source': 'points',
+                      'layout': {
+                        'icon-image': 'custom-marker',
+                        // get the title name from the source's "title" property
+                        'text-field': ['get', 'title'],
+                        'text-font': [
+                          'Open Sans Semibold',
+                          'Arial Unicode MS Bold'
+                        ],
+                        'text-offset': [0, 1.25],
+                        'text-anchor': 'top'
+                      }
+                    });
+                  }
+          );
         // make an initial directions request that
         // starts and ends at the same location
         getRoute(start);
@@ -131,6 +164,7 @@
             'circle-color': '#3887be'
             }
         });
+<<<<<<< HEAD
         map.on('click', (event) => {
             const coords = Object.keys(event.lngLat).map((key) => event.lngLat[key]);
             const end = {
@@ -179,6 +213,16 @@
 
 
     });
+=======
+
+        const directions = new MapboxDirections({
+          accessToken: mapboxgl.accessToken,
+        });
+        map.addControl(directions, 'top-left');
+
+        // this is where the code from the next step will go
+        });
+>>>>>>> 199e9a74932bb39dceb8775c5a52f996ef2108aa
 
 
     </script>

@@ -1,5 +1,6 @@
 import pandas as pd
 import csv
+import json
 
 def get_bad_offense_codes():
     df = pd.read_excel('data/all_offense_codes.xlsx')
@@ -18,7 +19,8 @@ def get_bad_offense_codes():
 
     # convert the list of key-value pairs to a dictionary
     bad_offenses = dict(zip(code_list_new, offenselist_new))
-    return bad_offenses
+    json_string = json.dumps(bad_offenses)
+    print(f'const jsonData = {json_string};')
 
 def get_crimes():
     bad_offenses = get_bad_offense_codes()
@@ -35,3 +37,6 @@ def get_crimes():
             if code not in crimes:
                 crimes[code] = description
     return crimes
+
+if __name__ == "__main__":
+    get_bad_offense_codes()
