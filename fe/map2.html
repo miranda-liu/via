@@ -31,7 +31,7 @@
     container: 'map',
     style: 'mapbox://styles/mapbox/streets-v12',
     center: [-71.038887, 42.364506], // starting position 42.3601, -71.0589
-    zoom: 6
+    zoom: 12
   });
 
   const avoidCoordinates = [
@@ -45,8 +45,8 @@
   // create a function to make a directions request
   map.on('click', (event) => {
     const coords = Object.keys(event.lngLat).map((key) => event.lngLat[key]);
-
     if (!start) {
+      console.log("start")
       start = coords;
       // Add starting point to the map
       map.addLayer({
@@ -74,6 +74,7 @@
         }
       });
     } else {
+      console.log("end")
       end = coords;
       const endFeature = {
         type: 'FeatureCollection',
@@ -103,80 +104,92 @@
             'circle-color': '#3887be'
           }
         });
+        console.log("In end again");
       }
-      getRoute();
+      clearRoutes();
+      getRoutes();
     }
   });
 
-  async function getRoute() {
+  async function getRoutes() {
     if (!start || !end) return; // Do nothing if start or end is not set
     const query = await fetch(
-            `https://api.mapbox.com/directions/v5/mapbox/walking/${start[0]},${start[1]};${end[0]},${end[1]}?steps=true&geometries=geojson&access_token=${mapboxgl.accessToken}`,
+            `https://api.mapbox.com/directions/v5/mapbox/driving/${start[0]},${start[1]};${end[0]},${end[1]}?steps=true&geometries=geojson&alternatives=true&access_token=${mapboxgl.accessToken}`,
             { method: 'GET' }
     );
     const json = await query.json();
-    const data = json.routes[0];
-    const route = data.geometry.coordinates;
-    const geojson = {
-      type: 'Feature',
-      properties: {},
-      geometry: {
-        type: 'LineString',
-        coordinates: route
-      }
-    };
-    if (map.getSource('route')) {
-      map.getSource('route').setData(geojson);
-    } else {
-      map.addLayer({
-        id: 'route',
-        type: 'line',
-        source: {
-          type: 'geojson',
-          data: geojson
-        },
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        paint: {
-          'line-color': '#8ebff1',
-          'line-width': 5,
-          'line-opacity': 0.75
-        }
+    if (json.routes && json.routes.length > 0) {
+      json.routes.forEach((route, index) => {
+        const routeGeojson = {
+          type: 'Feature',
+          properties: {},
+          geometry: route.geometry
+        };
+
+        // Add each alternative route to the map with a different color
+        map.addLayer({
+          id: `route-${index}`,
+          type: 'line',
+          source: {
+            type: 'geojson',
+            data: routeGeojson
+          },
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+          },
+          paint: {
+            'line-color': `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`, // Random color for each route
+            'line-width': 5,
+            'line-opacity': 0.75
+          }
+        });
       });
+    } else {
+      console.error('No routes found.');
     }
+  }
+
+  function clearRoutes() {
+    const layers = map.getStyle().layers;
+    layers.forEach((layer) => {
+      if (layer.type === 'line' && layer.id.startsWith('route-')) {
+        map.removeLayer(layer.id);
+      }
+    });
   }
 
   map.on('load', () => {
     map.loadImage(
-            'https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png',
-            (error, image) => {
-              if (error) throw error;
-              map.addImage('custom-marker', image);
+      'https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png',
+      (error, image) => {
+        if (error) throw error;
+        map.addImage('custom-marker', image);
 
-              // Add GeoJSON from output.js
-              map.addSource('points', {
-                'type': 'geojson',
-                'data': jsonData
-              });
+        // Add GeoJSON from output.js
+        map.addSource('points', {
+          'type': 'geojson',
+          'data': jsonData
+        });
 
-              map.addLayer({
-                'id': 'points',
-                'type': 'symbol',
-                'source': 'points',
-                'layout': {
-                  'icon-image': 'custom-marker',
-                  'text-field': ['get', 'title'],
-                  'text-font': [
-                    'Open Sans Semibold',
-                    'Arial Unicode MS Bold'
-                  ],
-                  'text-offset': [0, 1.25],
-                  'text-anchor': 'top'
-                }
-              });
-            }
+        map.addLayer({
+          'id': 'points',
+          'type': 'symbol',
+          'source': 'points',
+          'layout': {
+            'icon-image': 'custom-marker',
+            'icon-size': 0.5,
+            'text-field': ['get', 'title'],
+            'text-font': [
+              'Open Sans Semibold',
+              'Arial Unicode MS Bold'
+            ],
+            'text-size': 7,
+            'text-offset': [0, 1.25],
+            'text-anchor': 'top'
+          }
+        });
+      }
     );
   });
 </script>
